@@ -52,7 +52,7 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # API routes
-app.include_router(router.router, prefix="/api/v1")
+app.include_router(router, prefix="/api/v1")
 
 # Static files (frontend)
 static_dir = Path(__file__).parent / "static"
