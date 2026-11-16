@@ -1,0 +1,49 @@
+/* Icon font styles */
+.icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+}
+
+/* Material Design Icons */
+@font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url('https://fonts.gstatic.com/s/materialicons/v142/flUhRq6tzZclQEJ-Vdg-IuiaDwcJ.woff2') format('woff2');
+}
+
+[class^="icon-"]::before,
+[class*=" icon-"]::before {
+    display: inline-block;
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 1.5rem;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    white-space: nowrap;
+}
+
+.icon-dashboard::before { content: "dashboard"; }
+.icon-hosts::before { content: "computer"; }
+.icon-services::before { content: "settings"; }
+.icon-models::before { content: "schema"; }
+.icon-logs::before { content: "description"; }
+.icon-config::before { content: "tune"; }
+.icon-performance::before { content: "trending_up"; }
+.icon-status::before { content: "circle"; }
+.icon-cpu::before { content: "speed"; }
+.icon-memory::before { content: "storage"; }
+.icon-disk::before { content: "sd_card"; }
+.icon-network::before { content: "cloud_queue"; }
+.icon-temperature::before { content: "thermostat"; }
+.icon-menu::before { content: "menu"; }
+.icon-close::before { content: "close"; }
+.icon-refresh::before { content: "refresh"; }
+.icon-logout::before { content: "logout"; }
+.icon-search::before { content: "search"; }

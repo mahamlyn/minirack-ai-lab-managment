@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  management-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minirack-management
+    hostname: minirack-management
+    ports:
+      - "8080:8080"
+    environment:
+      DEBUG: "false"
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      LOG_LEVEL: "INFO"
+      LAFORGE_HOST: "192.168.1.161"
+      DATA_HOST: "192.168.1.160"
+      RIKER_HOST: "192.168.1.162"
+      OLLAMA_API_HOST: "http://192.168.1.160:11434"
+      OPENWEB_UI_URL: "http://192.168.1.162:8000"
+    volumes:
+      - /etc/minirack-ai-lab:/etc/minirack-ai-lab:ro
+    networks:
+      - minirack-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  minirack-network:
+    driver: bridge

@@ -1,0 +1,133 @@
+---
+# MiniRack AI Lab Management Portal Deployment
+# This playbook deploys the management dashboard to the ai-utility (LaForge) host
+
+- name: Management Portal Deployment
+  hosts: ai-utility
+  gather_facts: true
+  become: true
+  become_method: ansible.builtin.sudo
+  become_user: root
+  vars:
+    management_repo: "https://github.com/yourusername/minirack-ai-lab-managment.git"
+    management_dir: "/opt/minirack-management"
+    management_config_dir: "/etc/minirack-ai-lab"
+
+  tasks:
+    # Clone or update repository
+    - name: Management Portal | Clone repository
+      ansible.builtin.git:
+        repo: "{{ management_repo }}"
+        dest: "{{ management_dir }}"
+        version: main
+        force: true
+
+    # Create configuration directory
+    - name: Management Portal | Create configuration directory
+      ansible.builtin.file:
+        path: "{{ management_config_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    # Copy environment file
+    - name: Management Portal | Copy environment configuration
+      ansible.builtin.template:
+        src: management-env.j2
+        dest: "{{ management_dir }}/.env"
+        owner: root
+        group: docker
+        mode: '0640'
+
+    # Build Docker image
+    - name: Management Portal | Build Docker image
+      community.docker.docker_image:
+        name: minirack-management
+        tag: latest
+        build:
+          path: "{{ management_dir }}"
+          dockerfile: Dockerfile
+        source: build
+        state: present
+      register: docker_build_result
+
+    # Run Docker container
+    - name: Management Portal | Deploy Docker container
+      community.docker.docker_container:
+        name: minirack-management
+        image: minirack-management:latest
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "8080:8080"
+        env:
+          DEBUG: "false"
+          HOST: "0.0.0.0"
+          PORT: "8080"
+          LOG_LEVEL: "INFO"
+          LAFORGE_HOST: "192.168.1.161"
+          DATA_HOST: "192.168.1.160"
+          RIKER_HOST: "192.168.1.162"
+          OLLAMA_API_HOST: "http://192.168.1.160:11434"
+          OPENWEB_UI_URL: "http://192.168.1.162:8000"
+        volumes:
+          - "{{ management_config_dir }}:/etc/minirack-ai-lab:ro"
+        networks:
+          - name: minirack-network
+        healthcheck:
+          test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+          interval: 30s
+          timeout: 10s
+          retries: 3
+          start_period: 10s
+
+    # Wait for service to be healthy
+    - name: Management Portal | Wait for service to be healthy
+      ansible.builtin.uri:
+        url: "http://localhost:8080/health"
+        status_code: 200
+      register: health_check
+      until: health_check.status == 200
+      retries: 10
+      delay: 3
+
+    # Verify dashboard is accessible
+    - name: Management Portal | Verify dashboard is accessible
+      ansible.builtin.uri:
+        url: "http://localhost:8080/"
+        status_code: 200
+      register: dashboard_check
+      until: dashboard_check.status == 200
+      retries: 5
+      delay: 2
+
+    - name: Management Portal | Display deployment summary
+      ansible.builtin.debug:
+        msg: |
+          ========================================
+          🎉 Management Portal Deployment Complete
+          ========================================
+          
+          Portal URL: http://192.168.1.161:8080
+          API Docs: http://192.168.1.161:8080/api/docs
+          
+          Services Monitored:
+            - Ollama (ai-core: 192.168.1.160:11434)
+            - Open WebUI (ai-web: 192.168.1.162:8000)
+            - System services and performance
+          
+          Features:
+            ✓ Real-time host monitoring
+            ✓ Service health checks
+            ✓ Performance dashboards
+            ✓ Configuration management
+            ✓ System logs viewer
+            ✓ AI model management
+          
+          Next Steps:
+            1. Access the portal at http://192.168.1.161:8080
+            2. Review dashboard for all services
+            3. Configure environment settings as needed
+            4. Set up monitoring alerts (optional)
+          ========================================
